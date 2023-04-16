@@ -18,7 +18,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
-CORS(app, origins=['http://localhost:3000', 'https://starfish-app-3hf2q.ondigitalocean.app/'])
+CORS(app, origins=['http://localhost:3000', 'https://starfish-app-3hf2q.ondigitalocean.app'])
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
