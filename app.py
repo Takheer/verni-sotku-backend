@@ -6,6 +6,9 @@ from flask_cors import CORS
 
 import os
 import json
+import gc
+import re
+import copy
 
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -36,6 +39,7 @@ def index():
 
 @app.route('/all-rows')
 def get_all_rows():
+    gc.collect()
     try:
         service = build('sheets', 'v4', credentials=get_credentials())
         sheet = service.spreadsheets()
@@ -49,10 +53,11 @@ def get_all_rows():
         return values
     except HttpError as err:
         print(err)
-        return []
+        abort(500)
 
 @app.route('/add-spending', methods=['POST'])
 def add_spending():
+    gc.collect()
     data = json.loads(request.data.decode('utf-8'))
     if not data or not 'spending' in data:
         abort(400)
@@ -83,6 +88,86 @@ def add_spending():
     except HttpError as err:
         print(err)
         return []
+
+@app.route('/statistics', methods=['GET'])
+def get_statistics():
+    values = []
+    try:
+        service = build('sheets', 'v4', credentials=get_credentials())
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+                                    range=RANGE_NAME).execute()
+        values = result.get('values', [])
+
+    except HttpError as err:
+        print(err)
+        return []
+
+    stats = {} # словарь объектов с ключами вида кто->кому и значениями в виде словаря кто,кому,сумма
+    response = {}
+    people = set(['Антон', 'Эльнур', 'Рома', 'Лера', 'Всем'])
+    people_except_all = set(['Антон', 'Эльнур', 'Рома', 'Лера'])
+
+    for person_a in people:
+        for person_b in people:
+            if person_a == person_b:
+                continue
+
+            if person_a not in stats:
+                stats[person_a] = {}
+
+            if person_b not in stats:
+                stats[person_b] = {}
+
+            if person_b not in stats[person_a]:
+                stats[person_a][person_b] = {
+                    "who_owes": person_a,
+                    "whom_owes": person_b,
+                    "sum": 0,
+                }
+
+            if person_a not in stats[person_b]:
+                stats[person_b][person_a] = {
+                "who_owes": person_b,
+                "whom_owes": person_a,
+                "sum": 0,
+            }
+
+    for val in values[1:]:
+        whom_owes = val[0]
+        who_owes = val[1]
+        sum = float(re.sub(",", "", val[2].split(' ')[0]))
+
+        stats[who_owes][whom_owes]["sum"] += sum
+
+    for person_a in people_except_all:
+        for person_b in people_except_all:
+            if person_b == person_a:
+                continue
+            stats[person_a][person_b]["sum"] += stats["Всем"][person_b]["sum"] / 4
+
+    del stats["Всем"]
+
+    response_data = {
+        "summed": stats,
+        "non_summed": copy.deepcopy(stats)
+    }
+
+    for person_a in people_except_all:
+        for person_b in people_except_all:
+            if person_b == person_a:
+                continue
+
+            person_a_owes_to_b = response_data["summed"][person_a][person_b]
+            person_b_owes_to_a = response_data["summed"][person_b][person_a]
+            if person_a_owes_to_b["sum"] > person_b_owes_to_a["sum"]:
+                person_a_owes_to_b["sum"] = person_a_owes_to_b["sum"] - person_b_owes_to_a["sum"]
+                person_b_owes_to_a["sum"] = 0
+            else:
+                person_b_owes_to_a["sum"] = person_b_owes_to_a["sum"] - person_a_owes_to_b["sum"]
+                person_a_owes_to_b["sum"] = 0
+
+    return response_data
 
 if __name__ == '__main__':
     app.run(debug=True)
