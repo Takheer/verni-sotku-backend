@@ -16,6 +16,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from db import get_db_connection
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -168,6 +170,42 @@ def get_statistics():
                 person_a_owes_to_b["sum"] = 0
 
     return response_data
+
+@app.route('/get-users', methods=['GET'])
+def get_users():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM users;')
+    books = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return books
+
+@app.route('/add-user', methods=['POST'])
+def add_user():
+    data = json.loads(request.data.decode('utf-8'))
+    if not data or not 'user' in data:
+        abort(400)
+
+    user = (
+        data['user']['uuid'],
+        data['user']['name'],
+        data['user']['email']
+    )
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute('INSERT INTO users (uuid, name, email)'
+                'VALUES (%s, %s, %s)',
+                user)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return []
 
 if __name__ == '__main__':
     app.run(debug=True)
