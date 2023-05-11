@@ -16,7 +16,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from db import get_db_connection
+from controllers.users import create_user, get_users, get_user_by_uuid
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -172,15 +172,8 @@ def get_statistics():
     return response_data
 
 @app.route('/get-users', methods=['GET'])
-def get_users():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM users;')
-    books = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return books
+def get_users_route():
+    return get_users()
 
 @app.route('/add-user', methods=['POST'])
 def add_user():
@@ -188,24 +181,12 @@ def add_user():
     if not data or not 'user' in data:
         abort(400)
 
-    user = (
-        data['user']['uuid'],
-        data['user']['name'],
-        data['user']['email']
-    )
+    return create_user(data['user']['uuid'],data['user']['name'],data['user']['email'])
 
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    cur.execute('INSERT INTO users (uuid, name, email)'
-                'VALUES (%s, %s, %s)',
-                user)
-
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return []
+@app.route('/get-user/<uuid>', methods=['GET'])
+def get_user_route(uuid):
+    user = get_user_by_uuid(uuid)
+    return user or []
 
 if __name__ == '__main__':
     app.run(debug=True)
