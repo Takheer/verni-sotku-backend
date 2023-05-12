@@ -17,6 +17,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from controllers.users import create_user, get_users, get_user_by_uuid
+from controllers.groups import get_all_groups, create_group, get_all_user_groups, get_group_by_slug
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -187,6 +188,24 @@ def add_user():
 def get_user_route(uuid):
     user = get_user_by_uuid(uuid)
     return user or []
+
+@app.route('/add-group', methods=['POST'])
+def add_group_route():
+    data = json.loads(request.data.decode('utf-8'))
+    if not data or not 'group' in data:
+        abort(400)
+
+    return create_group(data['group']['name'], data['group']['uuid'])
+
+
+@app.route('/get-groups/<user_uuid>')
+def get_all_user_groups_route(user_uuid):
+    return get_all_user_groups(user_uuid)
+
+
+@app.route('/get-group/<slug>')
+def get_group_by_slug_route(slug):
+    return get_group_by_slug(slug)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,7 +1,7 @@
 from db import get_db_connection, get_sa_connection
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from models import User
+from models import User, users_groups, Group
 
 def create_user(uuid, name, email):
     with Session(get_sa_connection()) as session:
@@ -27,6 +27,13 @@ def get_users():
 
 def get_user_by_uuid(uuid):
     with Session(get_sa_connection()) as session:
-        stmt = select(User).where(User.uuid == uuid)
-        for row in session.execute(stmt):
-            return row[0].to_json()
+        stmt = select(User).join(users_groups).join(Group).where(User.uuid == uuid)
+        groups_stmt = select(Group).join(users_groups).join(User).where(User.uuid == uuid)
+        all_groups = session.scalars(groups_stmt).all()
+        user = session.scalars(stmt).all()[0]
+        print(user.groups)
+
+        serialized_user = user.to_json()
+        serialized_user['groups'] = [g.to_json() for g in user.groups]
+
+        return serialized_user

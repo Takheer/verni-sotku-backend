@@ -21,6 +21,8 @@ class Group(Base):
     slug: Mapped[str] = mapped_column(String(350))
     name: Mapped[str] = mapped_column(String(350))
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    creator: Mapped[User] = relationship("User", foreign_keys=[creator_id])
     users: Mapped[List[User]] = relationship(
         secondary=users_groups, back_populates="groups"
     )
