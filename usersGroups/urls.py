@@ -31,14 +31,6 @@ async def send_email_url(email: str, session_dep: SessionDep):
     return create_otp(email, code, session_dep)
 
 
-@user_router.get("/{user_uuid}", response_model=UserSchema)
-async def get_user_url(user_uuid: str, session: SessionDep):
-    user = get_user_by_uuid(user_uuid, session)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return user
-
-
 @user_router.post("/auth")
 async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -62,3 +54,11 @@ async def login_for_access_token(
 @user_router.get("/me", response_model=UserSchema)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
+
+
+@user_router.get("/{user_uuid}", response_model=UserSchema)
+async def get_user_url(user_uuid: str, session: SessionDep):
+    user = get_user_by_uuid(user_uuid, session)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
