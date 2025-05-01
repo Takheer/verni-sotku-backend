@@ -7,6 +7,8 @@ from sqlalchemy import pool
 from alembic import context
 
 from models import Base
+from spendings import Spending
+from usersGroups import User, Group
 
 from dotenv import load_dotenv
 load_dotenv()
