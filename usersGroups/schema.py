@@ -2,7 +2,8 @@ import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
-from sqlalchemy.orm import Mapped
+
+from spendings import SpendingSchema
 
 
 class UserSchemaCreate(BaseModel):
@@ -36,10 +37,13 @@ class GroupSchemaCreate(BaseModel):
     users_ids: Optional[List[int]] = None
 
 
-class GroupSchema(GroupSchemaCreate):
+class GroupSchemaFlat(GroupSchemaCreate):
     id: int
     created_at: datetime.datetime
     creator_id: int
     creator: UserSchemaFlat
+
+
+class GroupSchema(GroupSchemaFlat):
     users: Optional[List[UserSchemaFlat]]
-    # spendings: Optional[List[Spending]]
+    spendings: Optional[List[SpendingSchema]]

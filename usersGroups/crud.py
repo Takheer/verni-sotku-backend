@@ -12,7 +12,7 @@ import aiohttp
 
 from db import SessionDep
 from spendings.models import Spending
-from usersGroups.models import User
+from usersGroups.models import User, Group
 import sqlalchemy as sa
 
 from usersGroups.schema import UserSchemaCreate, UserTokenData
@@ -138,3 +138,7 @@ async def send_email(email: str, code: int):
                 raise Exception(html['message'])
 
             return html
+
+
+def get_group(group_slug: str, session: SessionDep):
+    return session.query(Group).join(Spending).order_by(Spending.created_at.desc()).filter(Group.slug == group_slug).one_or_none()

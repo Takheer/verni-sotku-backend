@@ -9,8 +9,8 @@ from starlette import status
 from db import SessionDep
 from . import User
 from .crud import create_user, send_email, create_otp, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES, \
-    create_access_token, validate_user, get_user_by_uuid
-from .schema import UserSchemaFlat, UserSchemaCreate, UserToken, UserSchema
+    create_access_token, validate_user, get_user_by_uuid, get_group
+from .schema import UserSchemaFlat, UserSchemaCreate, UserToken, UserSchema, GroupSchema, GroupSchemaFlat
 
 user_router = APIRouter(prefix="/user", tags=["user"])
 group_router = APIRouter(prefix="/group", tags=["group"])
@@ -56,9 +56,25 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]
     return current_user
 
 
+@user_router.get("/groups", response_model=List[GroupSchemaFlat])
+async def get_groups_url(current_user: Annotated[User, Depends(get_current_user)], session: SessionDep):
+    print('current_user', current_user)
+    if current_user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return current_user.groups
+
+
 @user_router.get("/{user_uuid}", response_model=UserSchema)
 async def get_user_url(user_uuid: str, session: SessionDep):
     user = get_user_by_uuid(user_uuid, session)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+@group_router.get("/{slug}", response_model=GroupSchema)
+async def get_group_url(slug: str, session: SessionDep):
+    group = get_group(slug, session)
+    if group is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+    return group

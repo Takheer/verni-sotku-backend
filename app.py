@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from usersGroups.urls import user_router, group_router
+from spendings.urls import router as spendings_router
 
 app = FastAPI(redirect_slashes=False)
 
@@ -30,6 +31,7 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(group_router)
+app.include_router(spendings_router)
 
 # CORS(app, origins=['http://localhost:3000', 'https://verni-sotku-8fyod.ondigitalocean.app'])
 #
