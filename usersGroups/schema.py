@@ -3,8 +3,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from spendings import SpendingSchema
-
 
 class UserSchemaCreate(BaseModel):
     name: str
@@ -34,7 +32,7 @@ class GroupSchemaCreate(BaseModel):
     slug: str
     name: str
     creator_id: int
-    users_ids: Optional[List[int]] = None
+    users: Optional[List[UserSchemaFlat]] = None
 
 
 class GroupSchemaFlat(GroupSchemaCreate):
@@ -46,4 +44,3 @@ class GroupSchemaFlat(GroupSchemaCreate):
 
 class GroupSchema(GroupSchemaFlat):
     users: Optional[List[UserSchemaFlat]]
-    spendings: Optional[List[SpendingSchema]]

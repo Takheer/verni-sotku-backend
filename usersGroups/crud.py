@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 import os
 from typing import Annotated
@@ -31,6 +32,7 @@ def create_user(user: UserSchemaCreate, session: SessionDep):
         db_user = User(
             email=user.email,
             name=user.name,
+            uuid=str(uuid.uuid4()),
             registration_date=datetime.now()
         )
         session.add(db_user)
@@ -142,3 +144,10 @@ async def send_email(email: str, code: int):
 
 def get_group(group_slug: str, session: SessionDep):
     return session.query(Group).join(Spending).order_by(Spending.created_at.desc()).filter(Group.slug == group_slug).one_or_none()
+
+
+def add_user_to_group(user: User, slug: str, session: SessionDep):
+    group = session.query(Group).join(Spending).filter(Group.slug == slug).one_or_none()
+    group.users.append(user)
+    session.commit()
+    return group

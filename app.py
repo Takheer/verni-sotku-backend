@@ -4,10 +4,11 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
-load_dotenv()
 
 from usersGroups.urls import user_router, group_router
 from spendings.urls import router as spendings_router
+
+load_dotenv()
 
 app = FastAPI(redirect_slashes=False)
 
