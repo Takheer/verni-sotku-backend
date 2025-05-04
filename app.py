@@ -20,6 +20,7 @@ origins = [
     "http://localhost:5174",
     "https://insola-design.ru",
     "https://layout.insola.tech",
+    "https://verni-sotku-vue-83ry9.ondigitalocean.app",
 ]
 
 app.add_middleware(
