@@ -143,7 +143,7 @@ async def send_email(email: str, code: int):
 
 
 def get_group(group_slug: str, session: SessionDep):
-    return session.query(Group).join(Spending).order_by(Spending.created_at.desc()).filter(Group.slug == group_slug).one_or_none()
+    return session.query(Group).filter(Group.slug == group_slug).one_or_none()
 
 
 def add_user_to_group(user: User, slug: str, session: SessionDep):
